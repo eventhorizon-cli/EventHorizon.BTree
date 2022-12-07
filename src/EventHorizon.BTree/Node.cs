@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace EventHorizon.BTree;
 
+[DebuggerDisplay("ItemsCount = {ItemsCount}, ChildrenCount = {ChildrenCount}")]
 [DebuggerTypeProxy(typeof(Node<,>.DebugView))]
 internal class Node<TKey, TValue>
 {

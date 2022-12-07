@@ -1,5 +1,8 @@
+using System.Diagnostics;
+
 namespace EventHorizon.BTree;
 
+[DebuggerDisplay("Key = {Key}, Value = {Value}")]
 internal class Item<TKey, TValue>
 
 {
@@ -20,5 +23,4 @@ internal class Item<TKey, TValue>
     public TValue? Value { get; set; }
     
     #endregion
-
 }

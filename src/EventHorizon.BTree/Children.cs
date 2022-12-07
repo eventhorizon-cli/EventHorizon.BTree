@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 namespace EventHorizon.BTree;
 
+[DebuggerDisplay("Count = {Count}")]
 [DebuggerTypeProxy(typeof(Children<,>.DebugView))]
 internal class Children<TKey, TValue>
 {
