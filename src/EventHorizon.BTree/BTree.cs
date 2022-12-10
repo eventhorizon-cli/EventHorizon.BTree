@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace EventHorizon.BTree;
 
-[DebuggerDisplay("Degree = {Degree}, Count = {Count}")]
+[DebuggerDisplay("Degree = {Degree}, Count = {Count}, Height = {GetHeight()}")]
 [DebuggerTypeProxy(typeof(BTree<,>.DebugView))]
 public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?>>
 {
@@ -61,11 +61,7 @@ public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?
 
             throw new KeyNotFoundException();
         }
-        set
-        {
-            bool modified = TryInsert(key, value, InsertionBehavior.OverwriteExisting);
-            Debug.Assert(modified);
-        }
+        set => TryInsert(key, value, InsertionBehavior.OverwriteExisting);
     }
 
     #endregion
@@ -162,6 +158,11 @@ public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    public int GetHeight()
+    {
+        return _root?.GetHeight() ?? 0;
     }
 
     #endregion

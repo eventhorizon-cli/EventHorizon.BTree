@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace EventHorizon.BTree;
 
-[DebuggerDisplay("ItemsCount = {ItemsCount}, ChildrenCount = {ChildrenCount}")]
+[DebuggerDisplay("ItemsCount = {ItemsCount}, ChildrenCount = {ChildrenCount}, Height = {GetHeight()}")]
 [DebuggerTypeProxy(typeof(Node<,>.DebugView))]
 internal class Node<TKey, TValue>
 {
@@ -317,6 +317,8 @@ internal class Node<TKey, TValue>
         }
     }
 
+    public int GetHeight() => IsLeaf ? 0 : _children[0].GetHeight() + 1;
+
     #endregion
 
     #region Private Methods
@@ -391,19 +393,19 @@ internal class Node<TKey, TValue>
 
     #region DebugView
 
-   private class DebugView
-   {
-       private readonly Node<TKey, TValue> _node;
+    private class DebugView
+    {
+        private readonly Node<TKey, TValue> _node;
 
-       public DebugView(Node<TKey, TValue> node)
-       {
-           _node = node;
-       }
+        public DebugView(Node<TKey, TValue> node)
+        {
+            _node = node;
+        }
 
-       public Items<TKey, TValue?> Items => _node._items;
+        public Items<TKey, TValue?> Items => _node._items;
 
-       public Children<TKey, TValue?> Children => _node._children;
-   }
+        public Children<TKey, TValue?> Children => _node._children;
+    }
 
     #endregion
 }

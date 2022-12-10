@@ -4,7 +4,6 @@ namespace EventHorizon.BTree;
 
 [DebuggerDisplay("Key = {Key}, Value = {Value}")]
 internal class Item<TKey, TValue>
-
 {
     #region Constructors
 
