@@ -1,16 +1,15 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
 
-namespace EventHorizon.BTree.Benchmarks
+namespace EventHorizon.BTree.Benchmarks;
+
+public class BenchmarkConfig : ManualConfig
 {
-    public class BenchmarkConfig : ManualConfig
+    public BenchmarkConfig()
     {
-        public BenchmarkConfig()
-        {
-            Add(DefaultConfig.Instance);
-            Add(MemoryDiagnoser.Default);
+        Add(DefaultConfig.Instance);
+        Add(MemoryDiagnoser.Default);
             
-            ArtifactsPath = Path.Combine(AppContext.BaseDirectory, "artifacts", DateTime.Now.ToString("yyyy-mm-dd_hh-MM-ss"));
-        }
+        ArtifactsPath = Path.Combine(AppContext.BaseDirectory, "artifacts", DateTime.Now.ToString("yyyy-mm-dd_hh-MM-ss"));
     }
 }

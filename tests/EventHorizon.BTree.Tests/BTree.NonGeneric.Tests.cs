@@ -157,6 +157,30 @@ public class BTree_NonGeneric_Tests
     }
 
     [Fact]
+    public void BTree_Remove_From_Leaf()
+    {
+        var btree = new BTree<int, string>(3)
+        {
+            [1] = "1",
+            [2] = "2",
+            [3] = "3",
+            [4] = "4",
+            [5] = "5",
+            [6] = "6",
+            [7] = "7",
+            [8] = "8",
+            [9] = "9",
+            [10] = "10",
+            [11] = "11",
+            [12] = "12"
+        };
+        
+        btree.TryRemove(7, out var value);
+        Assert.Equal("7", value);
+        Assert.Equal(11, btree.Count);
+    }
+
+    [Fact]
     public void BTree_RemoveMax_With_Customer_Comparer()
     {
         // Arrange
@@ -241,18 +265,19 @@ public class BTree_NonGeneric_Tests
             [new Foo(9)] = "9",
             [new Foo(18)] = "18",
             [new Foo(10)] = "10",
-
         };
         // Act
         for (int i = 1; i <= 19; i++)
         {
             btree.TryRemove(new Foo(i), out var value);
+
             // Assert
+            Assert.Equal(btree.Count, 19 - i);
+            Assert.Equal(btree.Count, btree.Count());
             Assert.Equal(i.ToString(), value);
         }
 
         Assert.Empty(btree);
-        Assert.Equal(0, btree.Count);
     }
 
     [Fact]

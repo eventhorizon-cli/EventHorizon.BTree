@@ -183,7 +183,7 @@ public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?
 
         if (_root.IsItemsFull)
         {
-            // 将根节点分裂为两个节点
+            // 根节点已满，需要分裂
             var (middleItem, secondNode) = _root.Split();
             var oldRoot = _root;
             _root = new Node<TKey, TValue?>(_degree, _comparer);
@@ -194,6 +194,7 @@ public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?
             _root.AddChild(secondNode);
         }
 
+        // 从根节点开始插入，如果插入的 Key 已经存在，会按照 behavior 的值进行处理
         var insertionResult = _root.TryInsert(key, value, behavior);
         if (insertionResult == InsertionResult.Added) _count++;
 
@@ -211,7 +212,7 @@ public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?
         bool removed = _root.TryRemove(key, removeType, out var item);
         if (_root.IsItemsEmpty && !_root.IsLeaf)
         {
-            // TODO 为什么要取第一个子节点？
+            // 根节点原来的两个子节点进行了合并，根节点唯一的元素被移动到了子节点中，需要将合并后的子节点设置为新的根节点
             _root = _root.GetChild(0);
         }
 

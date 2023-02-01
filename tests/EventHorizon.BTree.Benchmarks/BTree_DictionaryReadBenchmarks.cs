@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace EventHorizon.BTree.Benchmarks;
 
-public class BTreeReadBenchmarks
+public class BTree_DictionaryReadBenchmarks
 {
     [Params(100)] public int DataSize;
 

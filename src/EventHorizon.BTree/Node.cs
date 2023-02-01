@@ -203,7 +203,6 @@ internal class Node<TKey, TValue>
         return (middleItem, secondNode);
     }
 
-
     public bool TryRemove(TKey? key, RemoveType removeType, [MaybeNullWhen(false)] out Item<TKey, TValue?> item)
     {
         int index = 0;
@@ -218,10 +217,12 @@ internal class Node<TKey, TValue>
                     return false;
                 }
 
+                // 如果是叶子节点，直接删除最后一个元素，就是删除最大的 Item
                 item = _items.RemoveLast();
                 return true;
             }
 
+            // 当前节点不是叶子节点，需要找到最大的子节点，继续向下查找并删除
             index = ItemsCount;
         }
 
@@ -235,19 +236,23 @@ internal class Node<TKey, TValue>
                     return false;
                 }
 
+                // 当前节点是叶子节点，直接删除第一个元素，就是删除最小的 Item
                 item = _items.RemoveAt(0);
                 return true;
             }
 
+            // 当前节点不是叶子节点，需要找到最小的子节点，继续向下查找并删除
             index = 0;
         }
 
         if (removeType == RemoveType.Item)
         {
+            // 如果没有找到，index 表示的是 key 可能在的子树的索引
             found = _items.TryFindKey(key!, out index);
 
             if (IsLeaf)
             {
+                // 如果是叶子节点，能找到就删除，找不到就返回 false，表示删除失败
                 if (found)
                 {
                     item = _items.RemoveAt(index);
@@ -259,6 +264,10 @@ internal class Node<TKey, TValue>
             }
         }
 
+        // 如果当前节点的左子节点的 Item 个数小于最小 Item 个数，就需要进行合并或者借元素
+        // 这个处理对应两种情况：
+        // 1. 要删除的 Item 就在当前节点中，为避免删除后导致当前节点的 Item 个数小于最小 Item 个数，需要先从左子节点中借一个 Item 过来
+        // 2. 要删除的 Item 在当前节点的子节点中，为避免删除后导致当前节点子节点的 Item 个数小于最小 Item 个数，需要先进行合并或者借元素
         if (_children[index].ItemsCount <= _minItems)
         {
             return GrowChildrenAndTryRemove(index, key!, removeType, out item);
@@ -268,9 +277,9 @@ internal class Node<TKey, TValue>
 
         if (found)
         {
+            // 如果在当前节点找到了，就删除当前节点的 Item，然后将 左子节点 中的最大的 Item 移动到当前节点中
             item = _items[index];
             child.TryRemove(default!, RemoveType.Max, out var stolenItem);
-            Debug.Assert(stolenItem != null);
             _items[index] = stolenItem;
             return true;
         }
@@ -323,6 +332,11 @@ internal class Node<TKey, TValue>
 
     #region Private Methods
 
+    /// <summary>
+    /// 如果指定的子节点已满，则将其分裂为两个子节点，并将中间的 <see cref="Item{TKey,TValue}"/>> 插入到当前节点中。
+    /// </summary>
+    /// <param name="childIndex">指定的子节点的索引</param>
+    /// <returns>True 表示已经分裂了子节点，False 表示没有分裂子节点</returns>
     private bool MaybeSplitChildren(int childIndex)
     {
         var childNode = _children[childIndex];
@@ -346,7 +360,7 @@ internal class Node<TKey, TValue>
     {
         if (childIndex > 0 && _children[childIndex - 1].ItemsCount > _minItems)
         {
-            // 如果左边的子节点的item数量大于最小值，则从左边的子节点借一个item
+            // 如果左边的子节点存在且左边的子节点的item数量大于最小值，则从左边的子节点借一个item
             var child = _children[childIndex];
             var stealFromChild = _children[childIndex - 1];
             child._items.InsertAt(0, _items[childIndex - 1]);
@@ -359,7 +373,7 @@ internal class Node<TKey, TValue>
 
         if (childIndex < ChildrenCount - 1 && _children[childIndex + 1].ItemsCount > _minItems)
         {
-            // 如果右边的子节点的item数量大于最小值，则从右边的子节点借一个item
+            // 如果右边的子节点存在且右边的子节点的item数量大于最小值，则从右边的子节点借一个item
             var child = _children[childIndex];
             var stealFromChild = _children[childIndex + 1];
             var stolenItem = stealFromChild._items.RemoveAt(0);
@@ -372,12 +386,14 @@ internal class Node<TKey, TValue>
         }
         else
         {
+            // 如果当前节点左右两边的子节点的item数量都不大于最小值（例如正好等于最小值 t-1 ），则合并当前节点和右边的子节点或者左边的子节点
+            // 优先和右边的子节点合并，如果右边的子节点不存在，则和左边的子节点合并
             if (childIndex >= ItemsCount)
             {
+                // ItemCount 代表最的子节点的索引，如果 childIndex 大于等于 ItemCount，说明右边的子节点不存在，需要和左边的子节点合并
                 childIndex--;
             }
 
-            // 如果左右两边的子节点的item数量都小于最小值，则合并两个子节点
             var child = _children[childIndex];
             var mergeItem = _items.RemoveAt(childIndex);
             var mergeChild = _children.RemoveAt(childIndex + 1);
