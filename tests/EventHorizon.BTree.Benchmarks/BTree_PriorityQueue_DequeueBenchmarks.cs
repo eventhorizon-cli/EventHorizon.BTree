@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 
 namespace EventHorizon.BTree.Benchmarks;
 
-public class BTree_PriorityQueueBenchmarks
+public class BTree_PriorityQueue_DequeueBenchmarks
 {
     [Params(1000, 1_0000,10_0000)] public int DataSize;
 

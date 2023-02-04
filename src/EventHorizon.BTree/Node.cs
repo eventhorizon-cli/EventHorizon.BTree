@@ -266,8 +266,9 @@ internal class Node<TKey, TValue>
 
         // 如果当前节点的左子节点的 Item 个数小于最小 Item 个数，就需要进行合并或者借元素
         // 这个处理对应两种情况：
-        // 1. 要删除的 Item 就在当前节点中，为避免删除后导致当前节点的 Item 个数小于最小 Item 个数，需要先从左子节点中借一个 Item 过来
-        // 2. 要删除的 Item 在当前节点的子节点中，为避免删除后导致当前节点子节点的 Item 个数小于最小 Item 个数，需要先进行合并或者借元素
+        // 1. 要删除的 Item 不在当前节点的子节点中，为避免删除后导致数据所在节点的 Item 个数小于最小 Item 个数，需要先进行合并或者借元素。
+        // 2. 要删除的 Item 就在当前节点中，为避免删除后导致当前节点的 Item 个数小于最小 Item 个数，需要先从左子节点中借一个 Item 过来，保证当前节点的 Item 数量不变。
+        // 为此先要保证左子节点被借用后的 Item 个数不小于最小 Item 个数。
         if (_children[index].ItemsCount <= _minItems)
         {
             return GrowChildrenAndTryRemove(index, key!, removeType, out item);
@@ -278,6 +279,7 @@ internal class Node<TKey, TValue>
         if (found)
         {
             // 如果在当前节点找到了，就删除当前节点的 Item，然后将 左子节点 中的最大的 Item 移动到当前节点中
+            // 以维持当前节点的 Item 个数不变，保证 B树 有 k 个子节点的非叶子节点拥有 k − 1 个键的特性。
             item = _items[index];
             child.TryRemove(default!, RemoveType.Max, out var stolenItem);
             _items[index] = stolenItem;
@@ -362,26 +364,30 @@ internal class Node<TKey, TValue>
         {
             // 如果左边的子节点存在且左边的子节点的item数量大于最小值，则从左边的子节点借一个item
             var child = _children[childIndex];
-            var stealFromChild = _children[childIndex - 1];
+            var leftChild = _children[childIndex - 1];
+            var stolenItem = leftChild._items.RemoveLast();
             child._items.InsertAt(0, _items[childIndex - 1]);
-            _items[childIndex - 1] = stealFromChild._items.RemoveLast();
-            if (!stealFromChild.IsLeaf)
+            _items[childIndex - 1] = stolenItem;
+            if (!leftChild.IsLeaf)
             {
-                child._children.InsertAt(0, stealFromChild._children.RemoveLast());
+                // 非叶子节点的子节点需要保证数量比item多1，item数量变了，子节点数量也要变
+                // 所以需要从左边的子节点中移除最后一个子节点，然后插入到当前子节点的第一个位置
+                child._children.InsertAt(0, leftChild._children.RemoveLast());
             }
         }
-
-        if (childIndex < ChildrenCount - 1 && _children[childIndex + 1].ItemsCount > _minItems)
+        else if (childIndex < ChildrenCount - 1 && _children[childIndex + 1].ItemsCount > _minItems)
         {
             // 如果右边的子节点存在且右边的子节点的item数量大于最小值，则从右边的子节点借一个item
             var child = _children[childIndex];
-            var stealFromChild = _children[childIndex + 1];
-            var stolenItem = stealFromChild._items.RemoveAt(0);
+            var rightChild = _children[childIndex + 1];
+            var stolenItem = rightChild._items.RemoveAt(0);
             child._items.Add(_items[childIndex]);
             _items[childIndex] = stolenItem;
-            if (!stealFromChild.IsLeaf)
+            if (!rightChild.IsLeaf)
             {
-                child.AddChild(stealFromChild._children.RemoveAt(0));
+                // 非叶子节点的子节点需要保证数量比item多1，item数量变了，子节点数量也要变
+                // 所以需要从右边的子节点中移除第一个子节点，然后插入到当前子节点的最后一个位置
+                child.AddChild(rightChild._children.RemoveAt(0));
             }
         }
         else

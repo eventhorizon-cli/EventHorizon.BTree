@@ -3,6 +3,38 @@ namespace EventHorizon.BTree.Tests;
 public class BTree_NonGeneric_Tests
 {
     [Fact]
+    public void BTree_Add_Remove_Random_Test()
+    {
+        // Assert
+        var random = Random.Shared;
+        var btree = new BTree<int, int>(random.Next(2, 32));
+
+        var keysToAdd = new HashSet<int>();
+        var keysToRemove = new HashSet<int>();
+
+        for (int i = 0; i < 1000; i++)
+        {
+            var key = random.Next(0, 100000);
+            keysToAdd.Add(key);
+            btree.TryAdd(key, key);
+        }
+
+        for (int i = 0; i < 1000; i++)
+        {
+            var key = random.Next(0, 100000);
+            keysToRemove.Add(key);
+        }
+        
+        // Act
+        foreach (var keyToRemove in keysToRemove)
+        {
+            var removed = btree.TryRemove(keyToRemove, out _);
+            // Assert
+            Assert.Equal(keysToAdd.Contains(keyToRemove), removed);
+        }
+    }
+
+    [Fact]
     public void BTree_Add_Key_With_Customer_Comparer()
     {
         var btree = new BTree<Foo, string>(3, new FooComparer());
@@ -174,7 +206,7 @@ public class BTree_NonGeneric_Tests
             [11] = "11",
             [12] = "12"
         };
-        
+
         btree.TryRemove(7, out var value);
         Assert.Equal("7", value);
         Assert.Equal(11, btree.Count);
@@ -205,8 +237,9 @@ public class BTree_NonGeneric_Tests
             [new Foo(9)] = "9",
         };
         // Act
-        btree.TryRemoveMax(out var max);
+        bool removed =  btree.TryRemoveMax(out var max);
         // Assert
+        Assert.True(removed);
         Assert.Equal("17", max);
     }
 
@@ -235,8 +268,9 @@ public class BTree_NonGeneric_Tests
             [new Foo(9)] = "9",
         };
         // Act
-        btree.TryRemoveMin(out var min);
+        bool removed = btree.TryRemoveMin(out var min);
         // Assert
+        Assert.True(removed);
         Assert.Equal("1", min);
     }
 
@@ -278,6 +312,98 @@ public class BTree_NonGeneric_Tests
         }
 
         Assert.Empty(btree);
+    }
+    
+    [Fact]
+    public void BTree_RemoveItem_From_Leaf()
+    {
+        // Arrange
+        var btree = new BTree<int, string>(3);
+
+        for (int i = 1; i <= 12; i++)
+        {
+            btree.Add(i, i.ToString());
+        }
+
+        // Act
+        btree.TryRemove(11, out var value);
+
+        // Assert
+        Assert.Equal("11", value);
+    }
+    
+    [Fact]
+    public void BTree_RemoveItem_From_Non_Leaf()
+    {
+        // Arrange
+        var btree = new BTree<int, string>(3);
+
+        for (int i = 1; i <= 12; i++)
+        {
+            btree.Add(i, i.ToString());
+        }
+
+        // Act
+        btree.TryRemove(3, out _);
+        btree.TryRemove(6, out var value);
+
+        // Assert
+        Assert.Equal("6", value);
+    }
+
+    [Fact]
+    public void BTree_RemoveItem_Steal_From_Left_Node()
+    {
+        // Arrange
+        var btree = new BTree<int, string>(3);
+
+        for (int i = 1; i <= 12; i++)
+        {
+            btree.Add(i, i.ToString());
+        }
+
+        // Act
+        btree.TryRemove(3, out _);
+        btree.TryRemove(7, out var value);
+
+        // Assert
+        Assert.Equal("7", value);
+    }
+
+    [Fact]
+    public void BTree_RemoveItem_Steal_From_Right_Node()
+    {
+        // Arrange
+        var btree = new BTree<int, string>(5);
+
+        for (int i = 1; i <= 12; i++)
+        {
+            btree.Add(i, i.ToString());
+        }
+
+        // Act
+        btree.TryRemove(4, out var value);
+
+        // Assert
+        Assert.Equal("4", value);
+    }
+
+    [Fact]
+    public void BTree_RemoveItem_Merge_Node()
+    {
+        // Arrange
+        var btree = new BTree<int, string>(4);
+
+        for (int i = 1; i <= 12; i++)
+        {
+            btree.Add(i, i.ToString());
+        }
+
+        // Act
+        btree.TryRemove(2, out var value);
+
+        // Assert
+        Assert.Equal("2", value);
     }
 
     [Fact]
