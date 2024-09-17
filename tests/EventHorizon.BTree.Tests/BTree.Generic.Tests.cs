@@ -69,4 +69,23 @@ public abstract class BTree_Generic_Tests<TKey, TValue>
         // Assert
         Assert.Throws<ArgumentNullException>(() => GenericBTreeFactory(3, null!));
     }
+
+    [Fact]
+    public void BTree_Foreach_Test()
+    {
+        var btree = GenericBTreeFactory(10);
+        foreach (var _ in btree)
+        {
+             
+        }
+        Assert.Equal(0, btree.Count);
+        var key =CreateTKey(1);
+        var value = CreateTValue(2);
+        btree.Add(key,value );
+        foreach (var (key1, value1) in btree)
+        {
+            Assert.Equal(value, value1);
+        }
+        Assert.Equal(1, btree.Count);
+    }
 }

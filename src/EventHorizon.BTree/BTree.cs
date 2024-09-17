@@ -149,9 +149,12 @@ public sealed class BTree<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue?
 
     public IEnumerator<KeyValuePair<TKey, TValue?>> GetEnumerator()
     {
-        foreach (var item in _root!.InOrderTraversal())
+        if (_count > 0)
         {
-            yield return new KeyValuePair<TKey, TValue?>(item.Key, item.Value);
+            foreach (var item in _root!.InOrderTraversal())
+            {
+                yield return new KeyValuePair<TKey, TValue?>(item.Key, item.Value);
+            }
         }
     }
 
