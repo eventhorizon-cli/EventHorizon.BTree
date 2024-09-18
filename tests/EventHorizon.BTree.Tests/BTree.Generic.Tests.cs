@@ -79,6 +79,10 @@ public abstract class BTree_Generic_Tests<TKey, TValue>
              
         }
         Assert.Equal(0, btree.Count);
+
+        var enumerator = btree.GetEnumerator();
+        Assert.False(enumerator.MoveNext());
+
         var key =CreateTKey(1);
         var value = CreateTValue(2);
         btree.Add(key,value );
@@ -88,4 +92,5 @@ public abstract class BTree_Generic_Tests<TKey, TValue>
         }
         Assert.Equal(1, btree.Count);
     }
+    
 }
